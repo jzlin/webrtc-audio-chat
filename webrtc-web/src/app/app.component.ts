@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 
 import { ConnectState, SignalrService } from './signalr/signalr.service';
 
@@ -7,7 +7,7 @@ import { ConnectState, SignalrService } from './signalr/signalr.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   connectState = ConnectState;
   state: ConnectState;
   lastUpdateTime: Date;
@@ -29,10 +29,8 @@ export class AppComponent implements OnInit {
   startTime = null;
 
   // Define peer connections, streams and audio elements.
-  // localAudio = document.getElementById('localAudio');
-  // remoteAudio = document.getElementById('remoteAudio');
-  @ViewChild('localAudio') localAudio: ElementRef;
-  @ViewChild('remoteAudio') remoteAudio: ElementRef;
+  localAudioSrcObject;
+  remoteAudioSrcObject;
 
   localStream;
   remoteStream;
@@ -42,41 +40,23 @@ export class AppComponent implements OnInit {
 
   // Define and add behavior to buttons.
 
-  // Define action buttons.
-  // startButton = document.getElementById('startButton');
-  // callButton = document.getElementById('callButton');
-  // hangupButton = document.getElementById('hangupButton');
-  @ViewChild('startButton') startButton: ElementRef;
-  @ViewChild('callButton') callButton: ElementRef;
-  @ViewChild('hangupButton') hangupButton: ElementRef;
+  startButtonDisabled = false;
+  callButtonDisabled = true;
+  hangupButtonDisabled = true;
 
   constructor(private signalrSvc: SignalrService) {
     this.signalrSvc.connectState$.subscribe(state => (this.state = state));
     this.signalrSvc.lastUpdateTime$.subscribe(time => (this.lastUpdateTime = time));
   }
 
-  ngOnInit() {
-    this.localAudio.nativeElement.addEventListener('loadedmetadata', this.logAudioLoaded);
-    this.remoteAudio.nativeElement.addEventListener('loadedmetadata', this.logAudioLoaded);
-
-    // Set up initial action buttons status: disable call and hangup.
-    this.callButton.nativeElement.disabled = true;
-    this.hangupButton.nativeElement.disabled = true;
-
-    // Add click event handlers for buttons.
-    this.startButton.nativeElement.addEventListener('click', this.startAction);
-    this.callButton.nativeElement.addEventListener('click', this.callAction);
-    this.hangupButton.nativeElement.addEventListener('click', this.hangupAction);
-  }
-
   // Define MediaStreams callbacks.
 
   // Sets the MediaStream as the audio element src.
   gotLocalMediaStream = (mediaStream) => {
-    this.localAudio.nativeElement.srcObject = mediaStream;
+    this.localAudioSrcObject = mediaStream;
     this.localStream = mediaStream;
     this.trace('Received local stream.');
-    this.callButton.nativeElement.disabled = false;  // Enable call button.
+    this.callButtonDisabled = false;  // Enable call button.
   }
 
   // Handles error by logging a message to the console.
@@ -87,7 +67,7 @@ export class AppComponent implements OnInit {
   // Handles remote MediaStream success by adding it as the remoteAudio src.
   gotRemoteMediaStream = (event) => {
     const mediaStream = event.stream;
-    this.remoteAudio.nativeElement.srcObject = mediaStream;
+    this.remoteAudioSrcObject = mediaStream;
     this.remoteStream = mediaStream;
     this.trace('Remote peer connection received remote stream.');
   }
@@ -115,7 +95,8 @@ export class AppComponent implements OnInit {
       otherPeer.addIceCandidate(newIceCandidate)
         .then(() => {
           this.handleConnectionSuccess(peerConnection);
-        }).catch((error) => {
+        })
+        .catch((error) => {
           this.handleConnectionFailure(peerConnection, error);
         });
 
@@ -172,13 +153,15 @@ export class AppComponent implements OnInit {
     this.localPeerConnection.setLocalDescription(description)
       .then(() => {
         this.setLocalDescriptionSuccess(this.localPeerConnection);
-      }).catch(this.setSessionDescriptionError);
+      })
+      .catch(this.setSessionDescriptionError);
 
     this.trace('remotePeerConnection setRemoteDescription start.');
     this.remotePeerConnection.setRemoteDescription(description)
       .then(() => {
         this.setRemoteDescriptionSuccess(this.remotePeerConnection);
-      }).catch(this.setSessionDescriptionError);
+      })
+      .catch(this.setSessionDescriptionError);
 
     this.trace('remotePeerConnection createAnswer start.');
     this.remotePeerConnection.createAnswer()
@@ -194,27 +177,30 @@ export class AppComponent implements OnInit {
     this.remotePeerConnection.setLocalDescription(description)
       .then(() => {
         this.setLocalDescriptionSuccess(this.remotePeerConnection);
-      }).catch(this.setSessionDescriptionError);
+      })
+      .catch(this.setSessionDescriptionError);
 
     this.trace('localPeerConnection setRemoteDescription start.');
     this.localPeerConnection.setRemoteDescription(description)
       .then(() => {
         this.setRemoteDescriptionSuccess(this.localPeerConnection);
-      }).catch(this.setSessionDescriptionError);
+      })
+      .catch(this.setSessionDescriptionError);
   }
 
   // Handles start button action: creates local MediaStream.
   startAction = () => {
-    this.startButton.nativeElement.disabled = true;
+    this.startButtonDisabled = true;
     navigator.mediaDevices.getUserMedia(this.mediaStreamConstraints)
-      .then(this.gotLocalMediaStream).catch(this.handleLocalMediaStreamError);
+      .then(this.gotLocalMediaStream)
+      .catch(this.handleLocalMediaStreamError);
     this.trace('Requesting local stream.');
   }
 
   // Handles call button action: creates peer connection.
   callAction = () => {
-    this.callButton.nativeElement.disabled = true;
-    this.hangupButton.nativeElement.disabled = false;
+    this.callButtonDisabled = true;
+    this.hangupButtonDisabled = false;
 
     this.trace('Starting call.');
     this.startTime = window.performance.now();
@@ -226,22 +212,25 @@ export class AppComponent implements OnInit {
     }
 
     const servers = null;  // Allows for RTC server configuration.
+    // const servers = {
+    //     iceServers: [
+    //         {urls: 'stun:stun.l.google.com:19302'}
+    //     ]
+    // };
 
     // Create peer connections and add behavior.
     this.localPeerConnection = new RTCPeerConnection(servers);
     this.trace('Created local peer connection object localPeerConnection.');
 
     this.localPeerConnection.addEventListener('icecandidate', this.handleConnection);
-    this.localPeerConnection.addEventListener(
-      'iceconnectionstatechange', this.handleConnectionChange);
+    this.localPeerConnection.addEventListener('iceconnectionstatechange', this.handleConnectionChange);
 
-      this.remotePeerConnection = new RTCPeerConnection(servers);
+    this.remotePeerConnection = new RTCPeerConnection(servers);
     this.trace('Created remote peer connection object remotePeerConnection.');
 
     this.remotePeerConnection.addEventListener('icecandidate', this.handleConnection);
-    this.remotePeerConnection.addEventListener(
-      'iceconnectionstatechange', this.handleConnectionChange);
-      this.remotePeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
+    this.remotePeerConnection.addEventListener('iceconnectionstatechange', this.handleConnectionChange);
+    this.remotePeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
 
     // Add local stream to connection and create offer to connect.
     this.localPeerConnection.addStream(this.localStream);
@@ -249,7 +238,8 @@ export class AppComponent implements OnInit {
 
     this.trace('localPeerConnection createOffer start.');
     this.localPeerConnection.createOffer(this.offerOptions)
-      .then(this.createdOffer).catch(this.setSessionDescriptionError);
+      .then(this.createdOffer)
+      .catch(this.setSessionDescriptionError);
   }
 
   // Handles hangup action: ends up call, closes connections and resets peers.
@@ -258,8 +248,8 @@ export class AppComponent implements OnInit {
     this.remotePeerConnection.close();
     this.localPeerConnection = null;
     this.remotePeerConnection = null;
-    this.hangupButton.nativeElement.disabled = true;
-    this.callButton.nativeElement.disabled = false;
+    this.hangupButtonDisabled = true;
+    this.callButtonDisabled = false;
     this.trace('Ending call.');
   }
 

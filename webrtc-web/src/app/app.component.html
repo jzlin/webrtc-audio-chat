@@ -14,11 +14,21 @@
 
 <h1>Realtime communication with WebRTC</h1>
 
-<audio #localAudio id="localAudio" autoplay playsinline></audio>
-<audio #remoteAudio id="remoteAudio" autoplay playsinline></audio>
+<audio #localAudio id="localAudio" autoplay playsinline
+  [srcObject]="localAudioSrcObject"
+  (loadedmetadata)="logAudioLoaded($event)"></audio>
+<audio #remoteAudio id="remoteAudio" autoplay playsinline
+  [srcObject]="remoteAudioSrcObject"
+  (loadedmetadata)="logAudioLoaded($event)"></audio>
 
 <div>
-  <button #startButton id="startButton">Start</button>
-  <button #callButton id="callButton">Call</button>
-  <button #hangupButton id="hangupButton">Hang up</button>
+  <button #startButton id="startButton"
+    (click)="startAction()"
+    [disabled]="startButtonDisabled">Start</button>
+  <button #callButton id="callButton"
+    (click)="callAction()"
+    [disabled]="callButtonDisabled">Call</button>
+  <button #hangupButton id="hangupButton"
+    (click)="hangupAction()"
+    [disabled]="hangupButtonDisabled">Hang up</button>
 </div>
