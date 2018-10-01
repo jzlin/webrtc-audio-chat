@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using WebRTC_DotNetCore.Hubs;
 
 namespace WebRTC_DotNetCore
 {
@@ -24,6 +25,11 @@ namespace WebRTC_DotNetCore
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSignalR(routes => 
+            {
+                routes.MapHub<WebRTCHub>("/webrtchub");
+            });
 
             app.Run(async (context) =>
             {
