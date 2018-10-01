@@ -1,0 +1,15 @@
+<audio #localAudio id="localAudio" autoplay playsinline
+  [srcObject]="localAudioSrcObject"
+  (loadedmetadata)="logAudioLoaded($event)"></audio>
+
+<div>
+  <button #startButton id="startButton"
+    (click)="startAction()"
+    [disabled]="startButtonDisabled">Start</button>
+  <button #callButton id="callButton"
+    (click)="callAction()"
+    [disabled]="callButtonDisabled">Call</button>
+  <button #hangupButton id="hangupButton"
+    (click)="hangupAction()"
+    [disabled]="hangupButtonDisabled">Hang up</button>
+</div>

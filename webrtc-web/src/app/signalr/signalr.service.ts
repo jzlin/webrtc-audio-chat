@@ -95,7 +95,7 @@ export class SignalrService {
         return this._hubConnection.off(methodName);
       }
     }
-    return Observable.throw('Cannot off method because there have other subscribers!');
+    return throwError('Cannot off method because there have other subscribers!');
   }
 
   invoke<T>(methodName: string, ...args: any[]) {
