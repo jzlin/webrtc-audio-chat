@@ -1,0 +1,78 @@
+
+.signalr-state {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin: 0 5px;
+  font-size: 15px;
+
+  &.disconnected {
+    color: red;
+
+    .signalr-state__icon {
+      background-color: red;
+      animation: none;
+    }
+  }
+
+  &.connecting {
+    color: blue;
+
+    .signalr-state__icon {
+      background-color: blue;
+    }
+  }
+
+  &.connected {
+    color: green;
+
+    .signalr-state__icon {
+      background-color: green;
+      animation: none;
+    }
+  }
+}
+
+  .signalr-state__light {
+    display: flex;
+    width: 115px;
+  }
+
+    .signalr-state__icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 100%;
+      animation-name: state-icon-flashing;
+      animation-delay: .5s;
+      animation-duration: 1s;
+      animation-iteration-count: infinite;
+    }
+
+    .signalr-state__name {
+      margin-left: 5px;
+    }
+
+  .signalr-state__time {
+    display: flex;
+    align-items: center;
+    width: 80px;
+    color: grey;
+
+    .material-icons {
+      font-size: 22px;
+    }
+  }
+
+    .signalr-state__last-update-time {
+      font-size: 13px;
+    }
+
+@keyframes state-icon-flashing {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: .1;
+  }
+}
