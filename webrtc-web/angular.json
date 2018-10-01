@@ -29,7 +29,9 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/webrtc-adapter/src/js/adapter_core.js"
+            ]
           },
           "configurations": {
             "production": {

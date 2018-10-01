@@ -11,3 +11,14 @@
     <span class="signalr-state__last-update-time">{{ lastUpdateTime | date:'shortTime' }}</span>
   </div>
 </div>
+
+<h1>Realtime communication with WebRTC</h1>
+
+<audio #localAudio id="localAudio" autoplay playsinline></audio>
+<audio #remoteAudio id="remoteAudio" autoplay playsinline></audio>
+
+<div>
+  <button #startButton id="startButton">Start</button>
+  <button #callButton id="callButton">Call</button>
+  <button #hangupButton id="hangupButton">Hang up</button>
+</div>

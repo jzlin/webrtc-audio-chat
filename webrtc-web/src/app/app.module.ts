@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { SignalrService } from './signalr/signalr.service';
+import { WebrtcService } from './webrtc/webrtc.service';
 
 @NgModule({
   declarations: [
@@ -11,7 +12,10 @@ import { SignalrService } from './signalr/signalr.service';
   imports: [
     BrowserModule
   ],
-  providers: [SignalrService],
+  providers: [
+    SignalrService,
+    WebrtcService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
