@@ -26,22 +26,27 @@ namespace WebRTC_DotNetCore.Hubs
         
         public Task CreatedOffer(object description)
         {
-            return Clients.All.SendAsync("OnCreatedOffer", description);
+            return Clients.Others.SendAsync("OnCreatedOffer", description);
         }
 
         public Task CreatedAnswer(object description)
         {
-            return Clients.All.SendAsync("OnCreatedAnswer", description);
+            return Clients.Others.SendAsync("OnCreatedAnswer", description);
         }
 
         public Task IceCandidate(object data) 
         {
-            return Clients.All.SendAsync("OnIceCandidate", data);
+            return Clients.Others.SendAsync("OnIceCandidate", data);
+        }
+
+        public Task CallAction()
+        {
+            return Clients.Others.SendAsync("OnCallAction");
         }
 
         public Task HangupAction()
         {
-            return Clients.All.SendAsync("OnHangupAction");
+            return Clients.Others.SendAsync("OnHangupAction");
         }
     }
 }

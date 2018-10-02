@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -10,6 +10,8 @@ import { SignalrService } from '../../signalr/signalr.service';
   styleUrls: ['./remote.component.scss']
 })
 export class RemoteComponent implements OnInit, OnDestroy {
+  @ViewChild('remoteAudio') remoteAudio: ElementRef;
+
   mediaStreamConstraints = { audio: true };
   startTime = null;
   remoteAudioSrcObject;
@@ -24,14 +26,24 @@ export class RemoteComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.listenOnCreatedOffer();
     this.listenOnIceCandidate();
+    // this.listenOnCallAction();
     this.listenOnHangupAction();
 
-    const servers = null;  // Allows for RTC server configuration.
-    // const servers = {
-    //     iceServers: [
-    //         {urls: 'stun:stun.l.google.com:19302'}
-    //     ]
-    // };
+    this.initPeerConnection();
+  }
+
+  ngOnDestroy() {
+    this.destory$.next();
+    this.destory$.complete();
+  }
+
+  private initPeerConnection() {
+    // const servers = null;  // Allows for RTC server configuration.
+    const servers = {
+      iceServers: [
+          {urls: 'stun:stun.l.google.com:19302'}
+      ]
+    };
 
     this.remotePeerConnection = new RTCPeerConnection(servers);
     this.trace('Created remote peer connection object remotePeerConnection.');
@@ -39,11 +51,6 @@ export class RemoteComponent implements OnInit, OnDestroy {
     this.remotePeerConnection.addEventListener('icecandidate', this.handleConnection);
     this.remotePeerConnection.addEventListener('iceconnectionstatechange', this.handleConnectionChange);
     this.remotePeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
-  }
-
-  ngOnDestroy() {
-    this.destory$.next();
-    this.destory$.complete();
   }
 
   private listenOnCreatedOffer() {
@@ -94,6 +101,20 @@ export class RemoteComponent implements OnInit, OnDestroy {
       });
   }
 
+  // private listenOnCallAction() {
+  //   this.signalrSvc
+  //     .on<any>('OnCallAction')
+  //     .pipe(
+  //       takeUntil(this.destory$)
+  //     )
+  //     .subscribe(data => {
+  //       console.log(data);
+  //       // Receive CallAction event from local by SignalR
+  //     }, error => {
+  //       console.error('OnCallAction Error!', error);
+  //     });
+  // }
+
   private listenOnHangupAction() {
     this.signalrSvc
       .on<any>('OnHangupAction')
@@ -105,6 +126,8 @@ export class RemoteComponent implements OnInit, OnDestroy {
         // Receive HangupAction event from local by SignalR
         this.remotePeerConnection.close();
         this.remotePeerConnection = null;
+        this.remoteAudio.nativeElement.pause();
+        this.initPeerConnection();
       }, error => {
         console.error('OnHangupAction Error!', error);
       });

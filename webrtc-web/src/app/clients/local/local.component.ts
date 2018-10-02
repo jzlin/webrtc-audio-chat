@@ -26,7 +26,7 @@ export class LocalComponent implements OnInit, OnDestroy {
   constructor(private signalrSvc: SignalrService) { }
 
   ngOnInit() {
-    this.listenCreatedAnswer();
+    this.listenOnCreatedAnswer();
     this.listenOnIceCandidate();
   }
 
@@ -35,9 +35,9 @@ export class LocalComponent implements OnInit, OnDestroy {
     this.destory$.complete();
   }
 
-  private listenCreatedAnswer() {
+  private listenOnCreatedAnswer() {
     this.signalrSvc
-      .on<any>('CreatedAnswer')
+      .on<any>('OnCreatedAnswer')
       .pipe(
         takeUntil(this.destory$)
       )
@@ -51,7 +51,7 @@ export class LocalComponent implements OnInit, OnDestroy {
         })
         .catch(this.setSessionDescriptionError);
       }, error => {
-        console.error('CreatedAnswer Error!', error);
+        console.error('OnCreatedAnswer Error!', error);
       });
   }
 
@@ -179,12 +179,12 @@ export class LocalComponent implements OnInit, OnDestroy {
       this.trace(`Using audio device: ${audioTracks[0].label}.`);
     }
 
-    const servers = null;  // Allows for RTC server configuration.
-    // const servers = {
-    //     iceServers: [
-    //         {urls: 'stun:stun.l.google.com:19302'}
-    //     ]
-    // };
+    // const servers = null;  // Allows for RTC server configuration.
+    const servers = {
+        iceServers: [
+            {urls: 'stun:stun.l.google.com:19302'}
+        ]
+    };
 
     // Create peer connections and add behavior.
     this.localPeerConnection = new RTCPeerConnection(servers);
@@ -192,6 +192,9 @@ export class LocalComponent implements OnInit, OnDestroy {
 
     this.localPeerConnection.addEventListener('icecandidate', this.handleConnection);
     this.localPeerConnection.addEventListener('iceconnectionstatechange', this.handleConnectionChange);
+
+    // Send CallAction event to remote with SignalR
+    this.signalrSvc.invoke('CallAction');
 
     // Add local stream to connection and create offer to connect.
     this.localPeerConnection.addStream(this.localStream);

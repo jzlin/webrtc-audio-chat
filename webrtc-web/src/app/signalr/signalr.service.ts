@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, ReplaySubject, Subject, throwError, Observable, interval, asyncScheduler } from 'rxjs';
 import { catchError, tap, filter, take, finalize } from 'rxjs/operators';
 
+import { environment } from '../../environments/environment';
 import { SignalrHubConnection } from './signalr-hub-connection';
 
 export enum ConnectState {
@@ -22,7 +23,7 @@ export class SignalrService {
     return this._lastUpdateTime.asObservable();
   }
 
-  private readonly _hubName = '/webrtchub';
+  private readonly _hubName = environment.signalrHub;
   private _hubConnection: SignalrHubConnection;
   private _connectStateSubject = new BehaviorSubject<ConnectState>(ConnectState.Disconnected);
   private _onMap = new Map<string, ReplaySubject<any>>();
