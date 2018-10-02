@@ -78,7 +78,6 @@ export class SignalrService {
           tap(() => this.off(methodName))
         )
         .subscribe(subject);
-      this.invoke('JoinGroup', methodName);
       this.invoke(methodName);
     }
 
@@ -91,7 +90,6 @@ export class SignalrService {
       const subject = this._onMap.get(methodName);
       if (subject.observers.length < 1) {
         subject.complete();
-        this.invoke('LeaveGroup', methodName);
         this._onMap.delete(methodName);
         return this._hubConnection.off(methodName);
       }
@@ -174,7 +172,6 @@ export class SignalrService {
           tap(() => this.off(methodName))
         )
         .subscribe(subject);
-      this.invoke('JoinGroup', methodName);
     });
     if (!this._onMap.size) {
       this.connect();

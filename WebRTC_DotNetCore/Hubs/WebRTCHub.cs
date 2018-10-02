@@ -24,29 +24,29 @@ namespace WebRTC_DotNetCore.Hubs
             return Groups.RemoveFromGroupAsync(Context.ConnectionId, name);
         }
         
-        public Task CreatedOffer(object description)
+        public Task CreatedOffer(string groupName, object description)
         {
-            return Clients.Others.SendAsync("OnCreatedOffer", description);
+            return Clients.OthersInGroup(groupName).SendAsync("OnCreatedOffer", description);
         }
 
-        public Task CreatedAnswer(object description)
+        public Task CreatedAnswer(string groupName, object description)
         {
-            return Clients.Others.SendAsync("OnCreatedAnswer", description);
+            return Clients.OthersInGroup(groupName).SendAsync("OnCreatedAnswer", description);
         }
 
-        public Task IceCandidate(object data) 
+        public Task IceCandidate(string groupName, object data) 
         {
-            return Clients.Others.SendAsync("OnIceCandidate", data);
+            return Clients.OthersInGroup(groupName).SendAsync("OnIceCandidate", data);
         }
 
-        public Task CallAction()
+        public Task CallAction(string groupName)
         {
-            return Clients.Others.SendAsync("OnCallAction");
+            return Clients.OthersInGroup(groupName).SendAsync("OnCallAction");
         }
 
-        public Task HangupAction()
+        public Task HangupAction(string groupName, object data)
         {
-            return Clients.Others.SendAsync("OnHangupAction");
+            return Clients.OthersInGroup(groupName).SendAsync("OnHangupAction", data);
         }
     }
 }

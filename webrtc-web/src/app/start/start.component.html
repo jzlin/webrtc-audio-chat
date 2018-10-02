@@ -1,0 +1,4 @@
+<form #form="ngForm" (ngSubmit)="onSubmit(form)">
+  <input type="text" name="room" placeholder="room name" autofocus [(ngModel)]="roomName">
+  <button type="submit" [disabled]="form.invalid">Enter</button>
+</form>

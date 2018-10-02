@@ -1,0 +1,14 @@
+<button (click)="call()" [disabled]="callButtonDisabled">Call</button>
+<button (click)="hangup()" [disabled]="hangupButtonDisabled">Hangup</button>
+
+<hr>
+
+<button (click)="log()">log</button>
+
+<hr>
+
+<ng-container *ngFor="let item of remoteStreamList">
+  <audio autoplay playsinline controls
+    [srcObject]="item">
+  </audio>
+</ng-container>
