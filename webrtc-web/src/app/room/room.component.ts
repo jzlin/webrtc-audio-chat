@@ -17,9 +17,9 @@ export class RoomComponent implements OnInit, OnDestroy {
   hangupButtonDisabled = true;
   sender: RTCRtpSender;
   localStream: MediaStream;
-  remoteStreamList: MediaStream[] = [];
+  remoteStream: MediaStream;
   localPeerConnection: RTCPeerConnection;
-  remotePeerConnectionList: RTCPeerConnection[] = [];
+  remotePeerConnection: RTCPeerConnection;
 
   private destory$ = new Subject();
 
@@ -55,6 +55,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.listenOnCreatedOffer();
     this.listenOnCreatedAnswer();
     this.listenOnCallAction();
+    this.listenOnAcceptCall();
     this.listenOnHangupAction();
   }
 
@@ -66,13 +67,12 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   log() {
     console.log(this.localPeerConnection, this.localStream);
-    console.log(this.remotePeerConnectionList, this.remoteStreamList);
+    console.log(this.remotePeerConnection, this.remoteStream);
   }
 
   private listenOnIceCandidate() {
     this.webrtcService.listenOnIceCandidate()
       .pipe(
-        delay(1000),
         takeUntil(this.destory$)
       )
       .subscribe(data => {
@@ -82,11 +82,8 @@ export class RoomComponent implements OnInit, OnDestroy {
         console.log(`listenOnIceCandidate -> ${data.type}`);
         switch (data.type) {
           case 'offer':
-            const remotePeerConnection = this.remotePeerConnectionList.find(rpc => rpc.localDescription.sdp === data.sdp);
-            console.log('remotePeerConnection', remotePeerConnection);
-            if (remotePeerConnection) {
-              remotePeerConnection.addIceCandidate(data.iceCandidate);
-            }
+            console.log('remotePeerConnection', this.remotePeerConnection);
+            this.remotePeerConnection.addIceCandidate(data.iceCandidate);
             break;
 
           case 'answer':
@@ -105,12 +102,11 @@ export class RoomComponent implements OnInit, OnDestroy {
       .subscribe(offerDescription => {
         // console.log(offerDescription);
         // Receive offerDescription from remote by SignalR
-        const remotePeerConnection = this.createRemotePeerConnection();
-        remotePeerConnection.setRemoteDescription(offerDescription);
+        this.remotePeerConnection.setRemoteDescription(offerDescription);
 
-        this.webrtcService.createAnswer(remotePeerConnection).subscribe(
+        this.webrtcService.createAnswer(this.remotePeerConnection).subscribe(
           answerDescription => {
-            remotePeerConnection.setLocalDescription(answerDescription);
+            this.remotePeerConnection.setLocalDescription(answerDescription);
 
             // Send answerDescription to remote by SignalR
             this.webrtcService.createdAnswer(this.roomName, answerDescription).subscribe();
@@ -132,28 +128,28 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   private createRemotePeerConnection() {
-    const remotePeerConnection = new RTCPeerConnection(this.webrtcService.servers);
+    if (this.remotePeerConnection) {
+      return;
+    }
+    this.remotePeerConnection = new RTCPeerConnection(this.webrtcService.servers);
 
-    remotePeerConnection.addEventListener('icecandidate', this.handleConnection);
-    remotePeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
-    remotePeerConnection.addEventListener('removestream', this.removeRemoteMediaStream);
+    this.remotePeerConnection.addEventListener('icecandidate', this.handleConnection);
+    this.remotePeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
+    this.remotePeerConnection.addEventListener('removestream', this.removeRemoteMediaStream);
 
-    this.remotePeerConnectionList.push(remotePeerConnection);
-
-    return remotePeerConnection;
+    (this.remotePeerConnection as any).addStream(this.localStream);
   }
 
   private gotRemoteMediaStream = (event: MediaStreamEvent) => {
     const mediaStream = event.stream;
     console.log('+++mediaStream', mediaStream);
-    this.remoteStreamList = this.remoteStreamList.filter(rs => rs.id !== mediaStream.id);
-    this.remoteStreamList.push(mediaStream);
+    this.remoteStream = mediaStream;
   }
 
   private removeRemoteMediaStream = (event: MediaStreamEvent) => {
     const mediaStream = event.stream;
     console.log('---mediaStream', mediaStream);
-    this.remoteStreamList = this.remoteStreamList.filter(rs => rs.id !== mediaStream.id);
+    this.remoteStream = null;
   }
 
   private listenOnCallAction() {
@@ -164,11 +160,28 @@ export class RoomComponent implements OnInit, OnDestroy {
       .subscribe(data => {
         // Receive CallAction event from remote by SignalR
         console.log('[CallAction]');
-        if (data.isCaller) {
-          timer(5000).subscribe(() => {
-            this.call(false);
-          });
-        }
+        this.createRemotePeerConnection();
+        this.acceptCall();
+      });
+  }
+
+  private listenOnAcceptCall() {
+    this.roomService.listenOnAcceptCall()
+      .pipe(
+        takeUntil(this.destory$)
+      )
+      .subscribe(data => {
+        // Receive AcceptCall event from remote by SignalR
+        console.log('[AcceptCall]');
+
+        this.webrtcService.createOffer(this.localPeerConnection).subscribe(
+          offerDescription => {
+            this.localPeerConnection.setLocalDescription(offerDescription);
+
+            // Send offerDescription to remote by SignalR
+            this.webrtcService.createdOffer(this.roomName, offerDescription);
+          }
+        );
       });
   }
 
@@ -180,14 +193,10 @@ export class RoomComponent implements OnInit, OnDestroy {
       .subscribe(data => {
         // Receive HangupAction event from remote by SignalR
         console.log('[HangupAction]');
-        const peerConnection = this.remotePeerConnectionList.find(rpc => rpc.localDescription.sdp === data.sdp);
-        console.log('---close connection', peerConnection);
-        if (peerConnection) {
-          peerConnection.close();
-          this.remotePeerConnectionList = this.remotePeerConnectionList.filter(rpc => rpc !== peerConnection);
-        }
-        if (data.isLeaver) {
-          this.hangup(false);
+        console.log('---close connection', this.remotePeerConnection);
+        if (this.remotePeerConnection) {
+          this.remotePeerConnection.close();
+          this.remotePeerConnection = null;
         }
       });
   }
@@ -209,6 +218,8 @@ export class RoomComponent implements OnInit, OnDestroy {
     // Create peer connections and add behavior.
     this.localPeerConnection = new RTCPeerConnection(this.webrtcService.servers);
     this.localPeerConnection.addEventListener('icecandidate', this.handleConnection);
+    this.localPeerConnection.addEventListener('addstream', this.gotRemoteMediaStream);
+    this.localPeerConnection.addEventListener('removestream', this.removeRemoteMediaStream);
 
     // Send CallAction event to remote with SignalR
     this.roomService.call(this.roomName, isCaller).subscribe();
@@ -216,15 +227,11 @@ export class RoomComponent implements OnInit, OnDestroy {
     // Add local stream to connection and create offer to connect.
     // this.sender = this.localPeerConnection.addTrack(audioTracks[0], this.localStream);
     (this.localPeerConnection as any).addStream(this.localStream);
+  }
 
-    this.webrtcService.createOffer(this.localPeerConnection).subscribe(
-      offerDescription => {
-        this.localPeerConnection.setLocalDescription(offerDescription);
-
-        // Send offerDescription to remote by SignalR
-        this.webrtcService.createdOffer(this.roomName, offerDescription);
-      }
-    );
+  acceptCall(isCallee = true) {
+    // Send AcceptCall event to remote by SignalR
+    this.roomService.acceptCall(this.roomName, isCallee);
   }
 
   hangup(isLeaver = true) {

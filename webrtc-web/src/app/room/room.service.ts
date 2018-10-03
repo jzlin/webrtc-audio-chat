@@ -62,6 +62,26 @@ export class RoomService {
     );
   }
 
+  acceptCall(name: string, isCallee: boolean) {
+    return this.signalrService.invoke('AcceptCall', name, { isCallee }).pipe(
+      tap(console.log),
+      catchError(error => {
+        // TODO: handle error
+        return throwError(error);
+      })
+    );
+  }
+
+  listenOnAcceptCall(): Observable<{ isCallee: boolean }> {
+    return this.signalrService.on<{ isCallee: boolean }>('OnAcceptCall').pipe(
+      tap(console.log),
+      catchError(error => {
+        // TODO: handle error
+        return throwError(error);
+      })
+    );
+  }
+
   hangup(name: string, isLeaver: boolean, sdp: string) {
     return this.signalrService.invoke('HangupAction', name, { isLeaver, sdp }).pipe(
       tap(console.log),

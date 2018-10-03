@@ -7,8 +7,6 @@
 
 <hr>
 
-<ng-container *ngFor="let item of remoteStreamList">
-  <audio autoplay playsinline controls
-    [srcObject]="item">
-  </audio>
-</ng-container>
+<audio autoplay playsinline controls
+  [srcObject]="remoteStream">
+</audio>
