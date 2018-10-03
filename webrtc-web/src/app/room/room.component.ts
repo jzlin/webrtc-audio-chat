@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, timer } from 'rxjs';
-import { takeUntil, delay } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { WebrtcService } from '../webrtc/webrtc.service';
 import { RoomService } from './room.service';

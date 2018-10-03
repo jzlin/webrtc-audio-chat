@@ -30,7 +30,7 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "./node_modules/webrtc-adapter/src/js/adapter_core.js"
+              "./node_modules/webrtc-adapter/out/adapter_no_edge_no_global.js"
             ]
           },
           "configurations": {
