@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, ReplaySubject, Subject, throwError, Observable, interval, asyncScheduler } from 'rxjs';
 import { catchError, tap, filter, take, finalize } from 'rxjs/operators';
 
+import { environment } from '../../environments/environment';
 import { SignalrHubConnection } from './signalr-hub-connection';
 
 export enum ConnectState {
@@ -22,7 +23,7 @@ export class SignalrService {
     return this._lastUpdateTime.asObservable();
   }
 
-  private readonly _hubName = '/webrtchub';
+  private readonly _hubName = environment.signalrHub;
   private _hubConnection: SignalrHubConnection;
   private _connectStateSubject = new BehaviorSubject<ConnectState>(ConnectState.Disconnected);
   private _onMap = new Map<string, ReplaySubject<any>>();
@@ -77,7 +78,6 @@ export class SignalrService {
           tap(() => this.off(methodName))
         )
         .subscribe(subject);
-      this.invoke('JoinGroup', methodName);
       this.invoke(methodName);
     }
 
@@ -90,12 +90,11 @@ export class SignalrService {
       const subject = this._onMap.get(methodName);
       if (subject.observers.length < 1) {
         subject.complete();
-        this.invoke('LeaveGroup', methodName);
         this._onMap.delete(methodName);
         return this._hubConnection.off(methodName);
       }
     }
-    return Observable.throw('Cannot off method because there have other subscribers!');
+    return throwError('Cannot off method because there have other subscribers!');
   }
 
   invoke<T>(methodName: string, ...args: any[]) {
@@ -173,7 +172,6 @@ export class SignalrService {
           tap(() => this.off(methodName))
         )
         .subscribe(subject);
-      this.invoke('JoinGroup', methodName);
     });
     if (!this._onMap.size) {
       this.connect();

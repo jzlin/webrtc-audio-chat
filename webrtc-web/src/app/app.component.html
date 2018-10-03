@@ -7,7 +7,10 @@
     <span class="signalr-state__name">{{ state }}</span>
   </div>
   <div class="signalr-state__time" [title]="'Last Update Time: ' + (lastUpdateTime | date:'EEEE, MMMM d, y, h:mm:ss a')">
-    <i class="material-icons">update</i>
     <span class="signalr-state__last-update-time">{{ lastUpdateTime | date:'shortTime' }}</span>
   </div>
 </div>
+
+<h1>Realtime communication with WebRTC</h1>
+
+<router-outlet></router-outlet>

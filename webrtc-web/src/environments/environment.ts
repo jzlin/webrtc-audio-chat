@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  // signalrHub: '/webrtchub'
+  signalrHub: 'https://webrtc-dotnet-core.azurewebsites.net/webrtchub'
 };
 
 /*

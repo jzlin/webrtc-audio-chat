@@ -1,0 +1,12 @@
+<button (click)="call()" [disabled]="callButtonDisabled">Call</button>
+<button (click)="hangup()" [disabled]="hangupButtonDisabled">Hangup</button>
+
+<hr>
+
+<button (click)="log()">log</button>
+
+<hr>
+
+<audio autoplay playsinline controls
+  [srcObject]="remoteStream">
+</audio>
