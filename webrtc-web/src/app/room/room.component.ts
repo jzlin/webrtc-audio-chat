@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, timer } from 'rxjs';
+import { takeUntil, delay } from 'rxjs/operators';
 
 import { WebrtcService } from '../webrtc/webrtc.service';
 import { RoomService } from './room.service';
@@ -72,6 +72,7 @@ export class RoomComponent implements OnInit, OnDestroy {
   private listenOnIceCandidate() {
     this.webrtcService.listenOnIceCandidate()
       .pipe(
+        delay(1000),
         takeUntil(this.destory$)
       )
       .subscribe(data => {
@@ -163,7 +164,11 @@ export class RoomComponent implements OnInit, OnDestroy {
       .subscribe(data => {
         // Receive CallAction event from remote by SignalR
         console.log('[CallAction]');
-        this.call(false);
+        if (data.isCaller) {
+          timer(5000).subscribe(() => {
+            this.call(false);
+          });
+        }
       });
   }
 
@@ -205,10 +210,8 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.localPeerConnection = new RTCPeerConnection(this.webrtcService.servers);
     this.localPeerConnection.addEventListener('icecandidate', this.handleConnection);
 
-    if (isCaller) {
-      // Send CallAction event to remote with SignalR
-      this.roomService.call(this.roomName).subscribe();
-    }
+    // Send CallAction event to remote with SignalR
+    this.roomService.call(this.roomName, isCaller).subscribe();
 
     // Add local stream to connection and create offer to connect.
     // this.sender = this.localPeerConnection.addTrack(audioTracks[0], this.localStream);
@@ -229,7 +232,9 @@ export class RoomComponent implements OnInit, OnDestroy {
     (this.localPeerConnection as any).removeStream(this.localStream);
 
     // Send HangupAction event to remote by SignalR
-    this.roomService.hangup(this.roomName, isLeaver, this.localPeerConnection.remoteDescription.sdp).subscribe();
+    if (this.localPeerConnection.remoteDescription) {
+      this.roomService.hangup(this.roomName, isLeaver, this.localPeerConnection.remoteDescription.sdp).subscribe();
+    }
 
     this.localPeerConnection.close();
     this.localPeerConnection = null;

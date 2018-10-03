@@ -39,9 +39,9 @@ namespace WebRTC_DotNetCore.Hubs
             return Clients.OthersInGroup(groupName).SendAsync("OnIceCandidate", data);
         }
 
-        public Task CallAction(string groupName)
+        public Task CallAction(string groupName, object data)
         {
-            return Clients.OthersInGroup(groupName).SendAsync("OnCallAction");
+            return Clients.OthersInGroup(groupName).SendAsync("OnCallAction", data);
         }
 
         public Task HangupAction(string groupName, object data)

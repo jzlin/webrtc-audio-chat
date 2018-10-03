@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  signalrHub: '/webrtchub'
+  // signalrHub: '/webrtchub'
+  signalrHub: 'https://webrtc-dotnet-core.azurewebsites.net/webrtchub'
 };
 
 /*

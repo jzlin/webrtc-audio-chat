@@ -42,8 +42,8 @@ export class RoomService {
     );
   }
 
-  call(name: string) {
-    return this.signalrService.invoke('CallAction', name).pipe(
+  call(name: string, isCaller: boolean) {
+    return this.signalrService.invoke('CallAction', name, { isCaller }).pipe(
       tap(console.log),
       catchError(error => {
         // TODO: handle error
@@ -52,8 +52,8 @@ export class RoomService {
     );
   }
 
-  listenOnCallAction(): Observable<any> {
-    return this.signalrService.on<any>('OnCallAction').pipe(
+  listenOnCallAction(): Observable<{ isCaller: boolean }> {
+    return this.signalrService.on<{ isCaller: boolean }>('OnCallAction').pipe(
       tap(console.log),
       catchError(error => {
         // TODO: handle error
