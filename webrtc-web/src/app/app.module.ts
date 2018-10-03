@@ -9,14 +9,10 @@ import { WebrtcService } from './webrtc/webrtc.service';
 import { RoomService } from './room/room.service';
 import { StartComponent } from './start/start.component';
 import { RoomComponent } from './room/room.component';
-import { LocalComponent } from './clients/local/local.component';
-import { RemoteComponent } from './clients/remote/remote.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    LocalComponent,
-    RemoteComponent,
     StartComponent,
     RoomComponent
   ],
